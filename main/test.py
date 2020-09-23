@@ -13,7 +13,7 @@ from loss import *
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="BBN evaluation")
+    parser = argparse.ArgumentParser(description="BPM evaluation")
 
     parser.add_argument(
         "--cfg",
@@ -41,6 +41,8 @@ def parse_args():
 
 def get_prior_estimate(para_dict_train, para_dict_test, LOSS_RATIO):
     device = para_dict_train["device"]
+
+    # power type kernel
     num_class_list_train = para_dict_train["num_class_list"]
     num_class_list_train = [i ** LOSS_RATIO for i in num_class_list_train]
     prior_prob_train = num_class_list_train / np.sum(num_class_list_train)
@@ -48,6 +50,7 @@ def get_prior_estimate(para_dict_train, para_dict_test, LOSS_RATIO):
     print("train dataset prior:")
     print(prior_prob_train)
 
+    # exponential type kernel   
     # num_class_list_test = para_dict_test["num_class_list"]
     # prior_prob_test = num_class_list_test / np.sum(num_class_list_test)
     # prior_prob_test = torch.FloatTensor(prior_prob_test).to(device)
@@ -57,6 +60,7 @@ def get_prior_estimate(para_dict_train, para_dict_test, LOSS_RATIO):
     # effective_num = [(1-beta**i)/(1-beta) for i in num_class_list_train]
     # print("effective number:")
     # print(effective_num)
+
     return prior_prob_train, None
 
 
@@ -74,7 +78,6 @@ def valid_model(dataLoader, model, num_classes, para_dict_train, para_dict_test,
 
     with torch.no_grad():
         for i, (image, image_labels) in enumerate(dataLoader):
-            # image = image.to(device)
             image, image_labels = image.to(device), image_labels.to(device)
             output = model(image)
 
@@ -83,7 +86,6 @@ def valid_model(dataLoader, model, num_classes, para_dict_train, para_dict_test,
             #     loss_vector.update(loss.cpu().numpy(), image_labels[j].cpu().numpy())
 
             image_labels = image_labels.cpu().numpy()
-
             result = func(output)
             ######################################
             result = result / prior_prob_train
@@ -119,14 +121,6 @@ def valid_model(dataLoader, model, num_classes, para_dict_train, para_dict_test,
 
 if __name__ == "__main__":
 
-    # cifar10
-    # many_medium = 1000
-    # medium_few = 200
-    # iNaturalist2018
-    many_medium = 100
-    medium_few = 20
-
-
     args = parse_args()
     update_config(cfg, args)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
@@ -138,18 +132,8 @@ if __name__ == "__main__":
 
     annotations_train = train_set.get_annotations()
     num_class_list_train, cat_list_train = get_category_list(annotations_train, num_classes, cfg)
-    # print("\ntrain class list number:")
-    # print(num_class_list_train)
-
-    list_train_numpy = np.array(num_class_list_train)
-    many_shot = list_train_numpy > many_medium
-    medium_shot = (list_train_numpy <= many_medium) & (list_train_numpy > medium_few)
-    few_shot = list_train_numpy <= medium_few
-
     annotations_test = test_set.get_annotations()
     num_class_list_test, cat_list_test = get_category_list(annotations_test, num_classes, cfg)
-    # print("\ntest class list number:")
-    # print(num_class_list_test)
 
     device = torch.device("cpu" if cfg.CPU_MODE else "cuda")
 
@@ -203,32 +187,6 @@ if __name__ == "__main__":
         pin_memory=cfg.PIN_MEMORY,
     )
 
-    # from torchsummary import summary
-    # summary(model, input_size=(3, 224, 224))
-
-    # model_state_dict = model.state_dict()
-    # # set bias as zero
-    # model_state_dict['module.classifier.bias'].copy_(torch.zeros(
-    #     (num_classes)))
-    # weight_ori = model_state_dict['module.classifier.weight']
-    # norm_weight = torch.norm(weight_ori, 2, 1)
-    # print("\nclassifier weight tau-norm is:")
-    # print(norm_weight.cpu().numpy())
-    #
-    # print("\ntrainset result:")
-    # acc, acc_per_class = valid_model(trainLoader, model, num_classes, para_dict_train,
-    #                      para_dict_test, criterion, LOSS_RATIO=0)
-    # print("many_shot",acc_per_class[many_shot].mean(),
-    #       "medium_shot", acc_per_class[medium_shot].mean(),
-    #       "few_shot",acc_per_class[few_shot].mean())
-    # print("\nvalidset result:")
-    # acc, acc_per_class = valid_model(testLoader, model, num_classes, para_dict_train,
-    #                      para_dict_test, criterion, LOSS_RATIO=0)
-    # print("many_shot",acc_per_class[many_shot].mean(),
-    #       "medium_shot", acc_per_class[medium_shot].mean(),
-    #       "few_shot",acc_per_class[few_shot].mean(),
-    #       "all", acc_per_class.mean())
-
 
     if cfg.METHOD == "tau_norm":
         model_state_dict = model.state_dict()
@@ -254,8 +212,6 @@ if __name__ == "__main__":
     elif cfg.METHOD == "BPM":
         best_accuracy = 0
         best_LOSS_RATIO = 0
-        # f = open("iNat2018_90.txt","w")
-        f = open("cifar100_10.txt","w")
         for LOSS_RATIO in np.arange(0.0, 2.0, 0.1):
             print("\n___________________________", LOSS_RATIO, "__________________________________")
             acc, acc_per_class = valid_model(testLoader, model, num_classes, para_dict_train,
@@ -263,61 +219,9 @@ if __name__ == "__main__":
             if acc > best_accuracy:
                 best_accuracy = acc
                 best_LOSS_RATIO = LOSS_RATIO
-            print("when LOSS_RATIO is", best_LOSS_RATIO, ", best result is", best_accuracy)
-            # print("many_shot",acc_per_class[many_shot].mean(),
-            #     "medium_shot", acc_per_class[medium_shot].mean(),
-            #     "few_shot",acc_per_class[few_shot].mean(),
-            #     "all", acc_per_class.mean())
-            
-            # f.write(str(LOSS_RATIO)+" "+str(acc_per_class[many_shot].mean())+" "
-            #     +str(acc_per_class[medium_shot].mean())
-            #     +" "+str(acc_per_class[few_shot].mean())
-            #     +" "+str(acc)+"\n")  
-            f.write(str(acc)+"\t")               
+            print("when LOSS_RATIO is", best_LOSS_RATIO, ", best result is", best_accuracy)         
 
     else:
         print("Don not implement this method!")
 
-    f.close()
-        # best_accuracy = 0
-        # LOSS_RATIO = [1.0]*num_classes
-        # best_LOSS_RATIO = [0.0]*num_classes
-        # # step_list = [0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10]
-        # step_list = [0.02,0.04,0.06,0.08,0.10]
-        # # step_list = [0.03,0.06,0.09,0.12,0.15]
-        # # step_list = [0.04,0.08,0.10]
-        # # step_list = [0.05,0.10,0.15]
-        # # step_list = [0.07,0.14]
-        # t = 0
-        # index_list = [i for i in range(num_classes)]
-        # forw_back_list = [i for i in range(2)]
-        # import random
-        # while (1):
-        #     print("\n__________",LOSS_RATIO,"_____________")
-        #     o = 0
-        #     # random.shuffle(step_list)
-        #     for step in step_list:
-        #         random.shuffle(index_list)
-        #         for i in index_list:
-        #             random.shuffle(forw_back_list)
-        #             for j in forw_back_list:
-        #                 LOSS_RATIO_new = LOSS_RATIO.copy()
-        #                 if j==0:
-        #                     LOSS_RATIO_new[i] += step
-        #                 else:
-        #                     LOSS_RATIO_new[i] -= step
-        #                 acc, rec_per_class = valid_model(testLoader, model, cfg, device, num_classes, para_dict_train,
-        #                     para_dict_test, LOSS_RATIO_new)
-        #                 if acc > best_accuracy:
-        #                     best_accuracy = acc
-        #                     best_LOSS_RATIO = LOSS_RATIO_new.copy()
-        #                     o = 1
-        #                     break
-        #             if o==1: break
-        #         if o==1: break
-
-        #     if t == best_accuracy:
-        #         break
-        #     LOSS_RATIO = best_LOSS_RATIO.copy()
-        #     print("when LOSS_RATIO is", LOSS_RATIO, ", best result is", best_accuracy)
-        #     t = best_accuracy
+     

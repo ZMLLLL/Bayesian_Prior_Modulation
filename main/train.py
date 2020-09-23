@@ -65,7 +65,6 @@ if __name__ == "__main__":
     cudnn.benchmark = True
     auto_resume = args.auto_resume
 
-    # train_set = eval(cfg.DATASET.DATASET)("train", cfg, imb_type = 'step')
     train_set = eval(cfg.DATASET.DATASET)("train", cfg)
     valid_set = eval(cfg.DATASET.DATASET)("valid", cfg)
 
