@@ -251,7 +251,7 @@ if __name__ == "__main__":
                 best_accuracy = acc
                 best_p = p
             print("when p is", best_p, ", best result is", best_accuracy)
-    elif cfg.METHOD == "BPR":
+    elif cfg.METHOD == "BPM":
         best_accuracy = 0
         best_LOSS_RATIO = 0
         # f = open("iNat2018_90.txt","w")
