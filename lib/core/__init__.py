@@ -1,2 +1,2 @@
 from .evaluate import *
-from .function import GAP, Identity
+from .function import *
