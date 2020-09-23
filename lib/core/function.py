@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import time
 import torch.nn.functional as F
-from loss import regularization
 
 
 def train_model(
