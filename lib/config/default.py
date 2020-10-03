@@ -19,7 +19,7 @@ _C.RESUME_MODEL = ""
 _C.RESUME_MODE = "all"
 _C.CPU_MODE = False
 _C.EVAL_MODE = False
-_C.METHOD = "BPM"
+_C.METHOD = "BPR"
 
 
 # ----- DATASET BUILDER -----

@@ -153,7 +153,7 @@ if __name__ == "__main__":
     criterion = eval(cfg.LOSS.LOSS_TYPE)(para_dict=para_dict_train)
 
     model = Network(cfg, mode="test", num_classes=num_classes)
-    model_dir = os.path.join(cfg.OUTPUT_DIR, cfg.NAME, "models")
+    model_dir = os.path.join(cfg.OUTPUT_DIR, str(cfg.DATASET.IMBALANCECIFAR.RATIO),str(cfg.TRAIN.BATCH_SIZE), cfg.NAME, "models")
     model_file = cfg.TEST.MODEL_FILE
     if "/" in model_file:
         model_path = model_file

@@ -1,5 +1,5 @@
 NAME: 'CIFAR10.res32.200epoch'
-OUTPUT_DIR: './output/cifar10/0.01/32/baseline_0.8'
+OUTPUT_DIR: './output/cifar10/baseline_0.8'
 SHOW_STEP: 100
 SAVE_STEP: 5
 VALID_STEP: 1

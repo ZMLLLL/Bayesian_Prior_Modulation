@@ -1,5 +1,5 @@
 NAME: 'CIFAR100.res32.200epoch'
-OUTPUT_DIR: './output/cifar100/0.01/32/focal'
+OUTPUT_DIR: './output/cifar100/focal'
 SHOW_STEP: 100
 SAVE_STEP: 5
 VALID_STEP: 1

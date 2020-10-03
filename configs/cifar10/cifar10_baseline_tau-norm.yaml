@@ -1,5 +1,5 @@
 NAME: 'CIFAR10.res32.200epoch'
-OUTPUT_DIR: './output/cifar10/0.02/32/baseline'
+OUTPUT_DIR: './output/cifar10/baseline'
 SHOW_STEP: 100
 SAVE_STEP: 5
 VALID_STEP: 1
@@ -11,7 +11,7 @@ METHOD: 'tau_norm'
 DATASET:
   DATASET: 'IMBALANCECIFAR10'
   IMBALANCECIFAR:
-    RATIO: 0.02
+    RATIO: 0.01
 
 BACKBONE:
   TYPE: 'res32_cifar'

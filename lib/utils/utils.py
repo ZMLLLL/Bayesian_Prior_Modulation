@@ -13,7 +13,7 @@ def create_logger(cfg):
     dataset = cfg.DATASET.DATASET
     net_type = cfg.BACKBONE.TYPE
     module_type = cfg.MODULE.TYPE
-    log_dir = os.path.join(cfg.OUTPUT_DIR, cfg.NAME, "logs")
+    log_dir = os.path.join(cfg.OUTPUT_DIR,str(cfg.DATASET.IMBALANCECIFAR.RATIO),str(cfg.TRAIN.BATCH_SIZE), cfg.NAME, "logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     time_str = time.strftime("%Y-%m-%d-%H-%M")
@@ -127,10 +127,11 @@ def get_category_list(annotations, num_classes, cfg):
 
 def save_info(cfg, logger, model, device):
     # close loop
-    model_dir = os.path.join(cfg.OUTPUT_DIR, cfg.NAME, "models")
-    code_dir = os.path.join(cfg.OUTPUT_DIR, cfg.NAME, "codes")
+
+    model_dir = os.path.join(cfg.OUTPUT_DIR,str(cfg.DATASET.IMBALANCECIFAR.RATIO),str(cfg.TRAIN.BATCH_SIZE),cfg.NAME, "models")
+    code_dir = os.path.join(cfg.OUTPUT_DIR,str(cfg.DATASET.IMBALANCECIFAR.RATIO),str(cfg.TRAIN.BATCH_SIZE), cfg.NAME, "codes")
     tensorboard_dir = (
-        os.path.join(cfg.OUTPUT_DIR, cfg.NAME, "tensorboard")
+        os.path.join(cfg.OUTPUT_DIR, str(cfg.DATASET.IMBALANCECIFAR.RATIO),str(cfg.TRAIN.BATCH_SIZE), cfg.NAME, "tensorboard")
         if cfg.TRAIN.TENSORBOARD.ENABLE
         else None
     )
