@@ -10,6 +10,7 @@ CPU_MODE: False
 DATASET:
   DATASET: 'iNaturalist'
   DATA_TYPE: 'jpg'
+  ROOT: './datasets'
   TRAIN_JSON: './jsons/converted_train2018.json'
   VALID_JSON: './jsons/converted_val2018.json'
 
