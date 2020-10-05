@@ -10,7 +10,6 @@ CPU_MODE: False
 DATASET:
   DATASET: 'iNaturalist'
   DATA_TYPE: 'jpg'
-  ROOT: './datasets'
   TRAIN_JSON: './jsons/converted_train2018.json'
   VALID_JSON: './jsons/converted_val2018.json'
 
@@ -22,7 +21,6 @@ MODULE:
 
 LOSS:
   LOSS_TYPE: 'CrossEntropy'
-  RATIO: 1.3
 
 CLASSIFIER:
   TYPE: 'FC'
@@ -51,7 +49,7 @@ TRANSFORMS:
   TEST_TRANSFORMS: ("shorter_resize_for_crop", "center_crop")
 
 TEST:
-  BATCH_SIZE: 256
+  BATCH_SIZE: 128
   NUM_WORKERS: 16
   MODEL_FILE: 'best_model.pth'
 

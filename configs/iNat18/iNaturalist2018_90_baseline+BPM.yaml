@@ -1,5 +1,5 @@
 NAME: 'Baseline.iNaturalist2018.res50.90epoch'
-OUTPUT_DIR: './output/iNat18_90_baseline'
+OUTPUT_DIR: './output/iNat18_90_baseline+BPM'
 SHOW_STEP: 500
 SAVE_STEP: 5
 VALID_STEP: 1
@@ -21,6 +21,7 @@ MODULE:
 
 LOSS:
   LOSS_TYPE: 'CrossEntropy'
+  RATIO: 1.1
 
 CLASSIFIER:
   TYPE: 'FC'

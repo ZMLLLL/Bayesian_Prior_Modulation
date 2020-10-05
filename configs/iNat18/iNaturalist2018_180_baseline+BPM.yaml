@@ -1,5 +1,5 @@
-NAME: 'Baseline.iNaturalist2018.res50.90epoch'
-OUTPUT_DIR: './output/iNat18_90_baseline'
+NAME: 'Baseline.iNaturalist2018.res50.180epoch'
+OUTPUT_DIR: './output/iNat18_180_baseline+BPM'
 SHOW_STEP: 500
 SAVE_STEP: 5
 VALID_STEP: 1
@@ -21,6 +21,7 @@ MODULE:
 
 LOSS:
   LOSS_TYPE: 'CrossEntropy'
+  RATIO: 1.3
 
 CLASSIFIER:
   TYPE: 'FC'
@@ -28,7 +29,7 @@ CLASSIFIER:
   
 TRAIN:
   BATCH_SIZE: 128
-  MAX_EPOCH: 90
+  MAX_EPOCH: 180
   NUM_WORKERS: 16
   TENSORBOARD:
     ENABLE: False
@@ -41,7 +42,7 @@ TRAIN:
     WEIGHT_DECAY: 1e-4
   LR_SCHEDULER:
     TYPE: 'multistep'
-    LR_STEP: [55, 75, 85]
+    LR_STEP: [110, 150, 170]
     LR_FACTOR: 0.1
 
 TRANSFORMS:
