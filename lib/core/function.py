@@ -19,12 +19,16 @@ def train_model(
     func = torch.nn.Softmax(dim=1)
     all_loss = AverageMeter()
     acc = AverageMeter()
-    for i, (image, label) in enumerate(trainLoader):
+    for i, (image, label, noise) in enumerate(trainLoader):
 
         cnt = label.shape[0]
-        image, label = image.to(device), label.to(device)
-        output = model(image)
+        image, label, noise = image.to(device), label.to(device), noise.to(device)
+        label = torch.cat((label,label),0)
+        output, feat_all= model(image, noise)
+        #################################################################################
+        # loss = criterion(output, label) - 0.05 * torch.norm(aug_feature,p=2,dim=1).mean()
         loss = criterion(output, label)
+        #################################################################################
         now_result = torch.argmax(func(output), 1)
 
         now_acc = accuracy(now_result.cpu().numpy(), label.cpu().numpy())[0]
@@ -68,10 +72,11 @@ def valid_model(
         all_loss = AverageMeter()
         acc = AverageMeter()
         func = torch.nn.Softmax(dim=1)
-        for i, (image, label) in enumerate(dataLoader):
+        for i, (image, label, _) in enumerate(dataLoader):
             image, label = image.to(device), label.to(device)
 
-            output = model(image)
+            output, feat_all = model(image, None)
+
             loss = criterion(output, label)
             score_result = func(output)
             score_result = score_result / prior_prob

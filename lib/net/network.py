@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from backbone import res50,res32_cifar
+from aug_module import MLP_AUG, Conv_AUG
 from modules import GAP, Identity, FCNorm, DistFC
 import torch.nn.functional as F
 
@@ -25,16 +26,40 @@ class Network(nn.Module):
             pretrained_model=cfg.BACKBONE.PRETRAINED_MODEL,
             last_layer_stride=2,
         )
+
+        if cfg.MPL_AUG.ENABLE is True:
+            self.aug_module = MLP_AUG(cfg)
+        elif cfg.CON_AUG.ENABLE is True:
+            self.aug_module = Conv_AUG(cfg)
+        else:
+            self.aug_module = None
+
         self.module = self._get_module()
         self.classifier = self._get_classifer()
         self.feature_len = self.get_feature_length()
 
-    def forward(self, x):
-        x = self.backbone(x)
+    def forward(self, image, noise):
+        ###########################################
+        x = self.backbone(image)
         x = self.module(x)
-        x = x.view(x.shape[0], -1)
-        x = self.classifier(x)
-        return x
+        rep_feature = x.view(x.shape[0], -1)
+        ###########################################
+        if not noise is None:
+            if self.cfg.MPL_AUG.ENABLE:
+                aug_feature = self.aug_module(noise + rep_feature)
+            elif self.cfg.CON_AUG.ENABLE:
+                aug_feature = self.aug_module(image + noise)
+                aug_feature = self.module(aug_feature)
+                aug_feature = aug_feature.view(aug_feature.shape[0], -1)
+            feat_all = torch.cat((rep_feature, aug_feature), 0)
+        else:
+            aug_feature = None
+            feat_all = rep_feature
+        ###########################################
+
+        output = self.classifier(feat_all)
+        return output, feat_all
+        # return x 
 
 
     def freeze_backbone(self):

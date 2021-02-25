@@ -2,14 +2,8 @@ import _init_paths
 from loss import *
 from dataset import *
 from config import cfg, update_config
-from utils.utils import (
-    create_logger,
-    get_optimizer,
-    get_scheduler,
-    get_model,
-    get_category_list,
-    save_info
-)
+from utils.utils import (create_logger, get_optimizer, get_scheduler,
+                         get_model, get_category_list, save_info)
 from core.function import train_model, valid_model
 import torch
 import os
@@ -59,7 +53,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     update_config(cfg, args)
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+    # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
     logger, log_file = create_logger(cfg)
     warnings.filterwarnings("ignore")
     cudnn.benchmark = True
@@ -90,14 +84,12 @@ if __name__ == "__main__":
     scheduler = get_scheduler(cfg, optimizer)
 
     # ----- END MODEL BUILDER -----
-    trainLoader = DataLoader(
-        train_set,
-        batch_size=cfg.TRAIN.BATCH_SIZE,
-        shuffle=cfg.TRAIN.SHUFFLE,
-        num_workers=cfg.TRAIN.NUM_WORKERS,
-        pin_memory=cfg.PIN_MEMORY,
-        drop_last=True
-    )
+    trainLoader = DataLoader(train_set,
+                             batch_size=cfg.TRAIN.BATCH_SIZE,
+                             shuffle=cfg.TRAIN.SHUFFLE,
+                             num_workers=cfg.TRAIN.NUM_WORKERS,
+                             pin_memory=cfg.PIN_MEMORY,
+                             drop_last=True)
     validLoader = DataLoader(
         valid_set,
         batch_size=cfg.TEST.BATCH_SIZE,
@@ -117,18 +109,20 @@ if __name__ == "__main__":
         auto_resume = False
     else:
         all_models.remove("best_model.pth")
-        resume_epoch = max([int(name.split(".")[0].split("_")[-1]) for name in all_models])
-        resume_model_path = os.path.join(model_dir, "epoch_{}.pth".format(resume_epoch))
+        resume_epoch = max(
+            [int(name.split(".")[0].split("_")[-1]) for name in all_models])
+        resume_model_path = os.path.join(model_dir,
+                                         "epoch_{}.pth".format(resume_epoch))
 
     if cfg.RESUME_MODEL != "" or auto_resume:
         if cfg.RESUME_MODEL == "":
             resume_model = resume_model_path
         else:
-            resume_model = cfg.RESUME_MODEL if '/' in cfg.RESUME_MODEL else os.path.join(model_dir, cfg.RESUME_MODEL)
+            resume_model = cfg.RESUME_MODEL if '/' in cfg.RESUME_MODEL else os.path.join(
+                model_dir, cfg.RESUME_MODEL)
         logger.info("Loading checkpoint from {}...".format(resume_model))
-        checkpoint = torch.load(
-            resume_model, map_location="cpu" if cfg.CPU_MODE else "cuda"
-        )
+        checkpoint = torch.load(resume_model,
+                                map_location="cpu" if cfg.CPU_MODE else "cuda")
         if cfg.CPU_MODE:
             model.load_model(resume_model)
         else:
@@ -142,9 +136,7 @@ if __name__ == "__main__":
 
     logger.info(
         "-------------------Train start :{}  {}-------------------".format(
-            cfg.BACKBONE.TYPE, cfg.MODULE.TYPE
-        )
-    )
+            cfg.BACKBONE.TYPE, cfg.MODULE.TYPE))
 
     for epoch in range(start_epoch, epoch_number + 1):
 
@@ -157,45 +149,50 @@ if __name__ == "__main__":
         lr = next(iter(optimizer.param_groups))['lr']
         print("learning rate is ", lr)
 
-        train_acc, train_loss = train_model(
-            trainLoader, model, epoch, epoch_number, device,
-            optimizer,criterion, cfg, logger)
+        train_acc, train_loss = train_model(trainLoader, model, epoch,
+                                            epoch_number, device, optimizer,
+                                            criterion, cfg, logger)
         model_save_path = os.path.join(
             model_dir,
             "epoch_{}.pth".format(epoch),
         )
         if epoch % cfg.SAVE_STEP == 0:
-            torch.save({
-                'state_dict': model.state_dict(),
-                'epoch': epoch,
-                'best_result': best_result,
-                'best_epoch': best_epoch,
-                'scheduler': scheduler.state_dict(),
-                'optimizer': optimizer.state_dict()
-            }, model_save_path)
-
-        loss_dict, acc_dict = {"train_loss": train_loss}, {"train_acc": train_acc}
-
-        if cfg.VALID_STEP != -1 and epoch % cfg.VALID_STEP == 0:
-            valid_acc, valid_loss = valid_model(
-                para_dict, validLoader, epoch, model, cfg, criterion, logger)
-
-            loss_dict["valid_loss"], acc_dict["valid_acc"] = valid_loss, valid_acc
-            if valid_acc > best_result:
-                best_result, best_epoch = valid_acc, epoch
-                torch.save({
+            torch.save(
+                {
                     'state_dict': model.state_dict(),
                     'epoch': epoch,
                     'best_result': best_result,
                     'best_epoch': best_epoch,
                     'scheduler': scheduler.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                }, os.path.join(model_dir, "best_model.pth"))
+                    'optimizer': optimizer.state_dict()
+                }, model_save_path)
+
+        loss_dict, acc_dict = {
+            "train_loss": train_loss
+        }, {
+            "train_acc": train_acc
+        }
+
+        if cfg.VALID_STEP != -1 and epoch % cfg.VALID_STEP == 0:
+            valid_acc, valid_loss = valid_model(para_dict, validLoader, epoch,
+                                                model, cfg, criterion, logger)
+
+            loss_dict["valid_loss"], acc_dict[
+                "valid_acc"] = valid_loss, valid_acc
+            if valid_acc > best_result:
+                best_result, best_epoch = valid_acc, epoch
+                torch.save(
+                    {
+                        'state_dict': model.state_dict(),
+                        'epoch': epoch,
+                        'best_result': best_result,
+                        'best_epoch': best_epoch,
+                        'scheduler': scheduler.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                    }, os.path.join(model_dir, "best_model.pth"))
             logger.info(
-                "--------------Best_Epoch:{:>3d}    Best_Acc:{:>5.2f}%--------------".format(
-                    best_epoch, best_result * 100
-                )
-            )
+                "--------------Best_Epoch:{:>3d}    Best_Acc:{:>5.2f}%--------------"
+                .format(best_epoch, best_result * 100))
         if cfg.TRAIN.TENSORBOARD.ENABLE:
             writer.add_scalars("scalar/acc", acc_dict, epoch)
             writer.add_scalars("scalar/loss", loss_dict, epoch)
@@ -203,5 +200,5 @@ if __name__ == "__main__":
     if cfg.TRAIN.TENSORBOARD.ENABLE:
         writer.close()
     logger.info(
-        "-------------------Train Finished :{}-------------------".format(cfg.NAME)
-    )
+        "-------------------Train Finished :{}-------------------".format(
+            cfg.NAME))

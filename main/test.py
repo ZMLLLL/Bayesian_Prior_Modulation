@@ -77,17 +77,25 @@ def valid_model(dataLoader, model, num_classes, para_dict_train, para_dict_test,
     func = torch.nn.Softmax(dim=1)
 
     with torch.no_grad():
-        for i, (image, image_labels) in enumerate(dataLoader):
-            image, image_labels = image.to(device), image_labels.to(device)
-            output = model(image)
-
+        for i, (image, image_labels, noise) in enumerate(dataLoader):
+            image, image_labels, noise = image.to(device), image_labels.to(device), noise.to(device)
+            
+            output, feat_all = model(image, None)
+            # print(feat_all.shape)
+            # print(feat_all[0]-feat_all[128], feat_all[0])
+            # print(output[0], aug_feature[0],output[0]+aug_feature[0] )
+            # print(noise[0])
+            # print(output[0])
+            # print(aug_feature[0])
+            # print(output[0]+aug_feature[0])
             # for j in range(len(image_labels)):
             #     loss = criterion(output[j:j+1,:], image_labels[j:j+1])
             #     loss_vector.update(loss.cpu().numpy(), image_labels[j].cpu().numpy())
-
+            # print(image_labels.shape)
+            # image_labels = torch.cat((image_labels,image_labels),0).cpu().numpy()
             image_labels = image_labels.cpu().numpy()
             result = func(output)
-            ######################################
+            ######################################    
             result = result / prior_prob_train
             ######################################
             _, top_k = result.topk(5, 1, True, True)
@@ -127,7 +135,7 @@ if __name__ == "__main__":
     print(cfg.DATASET.DATASET)
 
     train_set = eval(cfg.DATASET.DATASET)("train", cfg)
-    test_set = eval(cfg.DATASET.DATASET)("valid", cfg)
+    test_set = eval(cfg.DATASET.DATASET)("test", cfg)
     num_classes = test_set.get_num_classes()
 
     annotations_train = train_set.get_annotations()
@@ -212,7 +220,8 @@ if __name__ == "__main__":
     elif cfg.METHOD == "BPM":
         best_accuracy = 0
         best_LOSS_RATIO = 0
-        for LOSS_RATIO in np.arange(0.0, 2.0, 0.1):
+        print(para_dict_train["num_class_list"])
+        for LOSS_RATIO in np.arange(0.0, 2.5, 0.1):
             print("\n___________________________", LOSS_RATIO, "__________________________________")
             acc, acc_per_class = valid_model(testLoader, model, num_classes, para_dict_train,
                                  para_dict_test, criterion, LOSS_RATIO)

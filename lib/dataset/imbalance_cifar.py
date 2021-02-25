@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 import random
+import torch
 
 
 class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
@@ -22,8 +23,8 @@ class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
             np.random.seed(rand_number)
             random.seed(rand_number)
             imb_factor = self.cfg.DATASET.IMBALANCECIFAR.RATIO
-            img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
-            self.gen_imbalanced_data(img_num_list)
+            self.img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
+            self.gen_imbalanced_data(self.img_num_list)
             self.transform = transforms.Compose([
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
@@ -114,7 +115,22 @@ class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return img, target
+        ##################################################
+        if self.cfg.MPL_AUG.ENABLE and self.train:
+            if self.img_num_list[target]/self.img_num_list[0]>0.3:
+                noise = torch.normal(torch.zeros(64), 1.0)
+            else:
+                noise = torch.normal(torch.zeros(64), 5.0)
+        elif self.cfg.CON_AUG.ENABLE and self.train:
+            if self.img_num_list[target]/self.img_num_list[0]>0.3:
+                noise = torch.normal(torch.zeros((3,32,32)), 1.0)
+            else:
+                noise = torch.normal(torch.zeros((3,32,32)), 5.0)
+        else: 
+            noise = 0
+        ###################################################
+        
+        return img, target, noise
 
     def get_num_classes(self):
         return self.cls_num
